@@ -9,7 +9,6 @@ class LoginForm extends Component {
     super(props)
     this.state = { errors: [] }
     this.onSubmit = this.onSubmit.bind(this)
-    this.clearErrors = this.clearErrors.bind(this)
   }
 
   onSubmit({ email, password }) {
@@ -18,16 +17,12 @@ class LoginForm extends Component {
       refetchQueries: [{ query }]
     })
     .then(() => {
-      if (this.state.errors) return this.clearErrors()
+      if (this.state.errors) return this.setState({ errors: [] })
     })
     .catch(res => {
       const errors = res.graphQLErrors.map(error => error.message)
       this.setState({ errors })
     })
-  }
-
-  clearErrors() {
-    this.setState({ errors: [] })
   }
 
   render() {
