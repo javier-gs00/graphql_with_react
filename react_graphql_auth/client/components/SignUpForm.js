@@ -2,16 +2,34 @@ import React, { Component } from 'react'
 import AuthForm from './AuthForm'
 import { graphql } from 'react-apollo'
 import mutation from '../mutations/signup'
+import query from '../queries/CurrentUser'
+import { hashHistory } from 'react-router'
 
 class SignUpForm extends Component {
   constructor(props) {
     super(props)
+    this.state = { errors: [] }
     this.onSubmit = this.onSubmit.bind(this)
+  }
+
+  componentWillUpdate(nextProps) {
+    // user was not signed in but now is
+    if (nextProps.data.user && !this.props.data.user) {
+      hashHistory.push('/dashboard')
+    } 
   }
 
   onSubmit({ email, password }) {
     this.props.mutate({
-      variables: { email, password }
+      variables: { email, password },
+      refetchQueries: [{ query }]
+    })
+    .then(() => {
+      if (this.state.errors) return this.setState({ errors: [] })
+    })
+    .catch(res => {
+      const errors = res.graphQLErrors.map(error => error.message)
+      this.setState({ errors })
     })
   }
 
@@ -20,7 +38,7 @@ class SignUpForm extends Component {
       <div>
         <h3>Sign Up</h3>
         <AuthForm
-          errors={[]}
+          errors={this.state.errors}
           onSubmit={this.onSubmit}
         />
       </div>
@@ -28,4 +46,6 @@ class SignUpForm extends Component {
   }
 }
 
-export default graphql(mutation)(SignUpForm)
+export default graphql(query)(
+  graphql(mutation)(SignUpForm)
+)
